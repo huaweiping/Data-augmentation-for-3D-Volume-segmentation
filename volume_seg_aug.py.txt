@@ -1,0 +1,13 @@
+import numpy as np
+
+def aug_flip_ud(image, mask):
+  image = image[:,::-1,:,:]
+  mask = mask[:,::-1,:]
+
+  return image, mask
+
+def aug_flip_lr(image, mask):
+  image = image[:,:,::-1,:]
+  mask = mask[:,:,::-1]
+
+  return image, mask
