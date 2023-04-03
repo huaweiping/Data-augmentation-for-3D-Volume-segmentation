@@ -1,5 +1,5 @@
-# Data-augmentation-for-Volume-segmentation
-This is a data augmentation tool for the 3D volume segmentation including Image and mask
+# Data-augmentation-for-3D-Volume-segmentation
+This is a data augmentation tool for the 3D volume segmentation including Image and mask(label)
 
 Thank you so much, ChatGPT!
 
@@ -11,6 +11,8 @@ Add value tp specific channel
 Shuffle channel
 Add pad
 Affine transformation
+
+See comments for details
 
 
 ## For single image-mask pair
