@@ -6,10 +6,10 @@ Thank you so much, ChatGPT!
 
 
 # Function provided:
-Flip
-Add value tp specific channel
-Shuffle channel
-Add pad
+Flip /
+Add value tp specific channel /
+Shuffle channel /
+Add pad /
 Affine transformation
 
 See comments for details
