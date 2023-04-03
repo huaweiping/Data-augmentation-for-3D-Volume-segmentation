@@ -1,13 +1,73 @@
-import numpy as np
-
+# upside-down flip
 def aug_flip_ud(image, mask):
   image = image[:,::-1,:,:]
   mask = mask[:,::-1,:]
 
   return image, mask
 
+# left-right flip
 def aug_flip_lr(image, mask):
   image = image[:,:,::-1,:]
   mask = mask[:,:,::-1]
+
+  return image, mask
+
+# bottom-up flip
+def aug_flip_bu(image, mask):
+  image = image[::-1,:,:,:]
+  mask = mask[::-1,:,:]
+
+  return image, mask
+
+# add value to the image.
+# default channel is 0
+# default add value is 0.1 (please set it between 0 and 1)
+def aug_add(image, mask, channel=0, addValue=0.1):
+  image[:,:,:,channel] = image[:,:,:,channel] + addValue
+  mask = mask
+
+  return image, mask
+
+# shuffle the channel of the image
+def aug_shuffleChannel(image, mask):
+  arraySize = image.shape
+  shuffleIndex = np.random.permutation(arraySize[-1])
+  image = image[:,:,:,shuffleIndex]
+  mask = mask
+
+  return image, mask
+
+# randomly crop the original image and mask to the final Size [depth, row, column]
+# the image will be rescaled to the original size in the end
+def aug_crop(image, mask, finalSize):
+  if(np.any(np.greater(np.array(finalSize),mask.shape))):
+    raise ValueError("Crop size is larger then the original image")
+  
+  start_x = np.random.randint(0, mask.shape[1] - finalSize[1] + 1)
+  start_y = np.random.randint(0, mask.shape[2] - finalSize[2] + 1)
+  start_z = np.random.randint(0, mask.shape[0] - finalSize[0] + 1)
+
+  cropped_image = image[start_z:start_z+finalSize[0], start_x:start_x+finalSize[1], start_y:start_y+finalSize[2], :]
+  cropped_mask = mask[start_z:start_z+finalSize[0], start_x:start_x+finalSize[1], start_y:start_y+finalSize[2]]
+
+  img_scale_factor = [mask.shape[0]/finalSize[0],mask.shape[1]/finalSize[1],mask.shape[2]/finalSize[2],1]
+  msk_scale_factor = [mask.shape[0]/finalSize[0],mask.shape[1]/finalSize[1],mask.shape[2]/finalSize[2]]
+
+  image = scipy.ndimage.zoom(cropped_image, img_scale_factor, order=2)
+  mask = scipy.ndimage.zoom(cropped_mask, msk_scale_factor, order=2)
+
+  print("croppedmask:\n",cropped_mask)
+  print("rescaledmask:\n",mask)
+
+  return image, mask
+
+# Pad value to the image. Only support pad at the end of each axis now
+def aug_pad(image, mask, padWidth=((0, 1), (0, 1), (0, 1)), padValue=0):
+  
+  padWidth4image = padWidth + ((0,0),)
+  print(padWidth4image)
+
+  image = np.pad(image, padWidth4image, mode='constant', constant_values = padValue)
+  mask = np.pad(mask, padWidth, mode='constant', constant_values = padValue)
 
   return image, mask
