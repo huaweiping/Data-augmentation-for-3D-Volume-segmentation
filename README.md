@@ -6,7 +6,7 @@ Thank you so much, ChatGPT!
 
 
 Current Version provides:
-// upside-down/left-right/bottom-up flip
+\\ upside-down/left-right/bottom-up flip
 aug_flip(image, mask) 
 
 // add value to the image.
