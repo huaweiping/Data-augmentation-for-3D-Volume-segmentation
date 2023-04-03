@@ -14,6 +14,9 @@ Affine transformation
 
 See comments for details
 
+## Ideal input:
+image: [number of sample, depth, row, column, channel==3] for dataset and [depth, row, column, channel==3] for single image-mask pair
+mask(label): [number of sample, depth, row, column] for dataset and [depth, row, column] for single image-mask pair
 
 ## For single image-mask pair
 <!-- upside-down/left-right/bottom-up flip-->
