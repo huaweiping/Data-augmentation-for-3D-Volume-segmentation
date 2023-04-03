@@ -5,7 +5,12 @@ Thank you so much, ChatGPT!
 
 
 
-# Current Version provides:
+# Function provided:
+Flip
+Add value tp specific channel
+Shuffle channel
+Add pad
+Affine transformation
 
 
 ## For single image-mask pair
