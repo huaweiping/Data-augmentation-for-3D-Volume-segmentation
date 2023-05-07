@@ -11,15 +11,15 @@ def aug_flip_ud(image, mask):
 
 # left-right flip
 def aug_flip_lr(image, mask):
-  image = image[:,:,::-1,:]
-  mask = mask[:,:,::-1]
+  image = image[::-1,:,:,:]
+  mask = mask[::-1,:,:,]
 
   return image, mask
 
 # bottom-up flip
 def aug_flip_bu(image, mask):
-  image = image[::-1,:,:,:]
-  mask = mask[::-1,:,:]
+  image = image[:,:,::-1,:]
+  mask = mask[:,:,::-1]
 
   return image, mask
 
@@ -43,25 +43,29 @@ def aug_shuffleChannel(image, mask):
 
 # randomly crop the original image and mask to the final Size [depth, row, column]
 # the image will be rescaled to the original size in the end
-def aug_crop(image, mask, finalSize):
-  if(np.any(np.greater(np.array(finalSize),mask.shape))):
-    raise ValueError("Crop size is larger then the original image")
-  
-  start_x = np.random.randint(0, mask.shape[1] - finalSize[1] + 1)
-  start_y = np.random.randint(0, mask.shape[2] - finalSize[2] + 1)
-  start_z = np.random.randint(0, mask.shape[0] - finalSize[0] + 1)
+def aug_crop(image, mask, finalSize):  
 
-  cropped_image = image[start_z:start_z+finalSize[0], start_x:start_x+finalSize[1], start_y:start_y+finalSize[2], :]
-  cropped_mask = mask[start_z:start_z+finalSize[0], start_x:start_x+finalSize[1], start_y:start_y+finalSize[2]]
+  start_x = np.random.randint(0, mask.shape[0] - finalSize[0] + 1)
+  start_y = np.random.randint(0, mask.shape[1] - finalSize[1] + 1)
+  start_z = np.random.randint(0, mask.shape[2] - finalSize[2] + 1)
+
+  # print("after crop innerFunction")
+  # plt.imshow(np.sqrt(np.square(image[:,:,0,1])+np.square(image[:,:,0,0])))
+  # plt.show()
+  
+  cropped_image = image[start_x:start_x+finalSize[0], start_y:start_y+finalSize[1], start_z:start_z+finalSize[2], :]
+  cropped_mask = mask[start_x:start_x+finalSize[0], start_y:start_y+finalSize[1], start_z:start_z+finalSize[2]]
+
+  # print("after crop innerFunction")
+  # plt.imshow(np.sqrt(np.square(cropped_image[:,:,0,1])+np.square(cropped_image[:,:,0,0])))
+  # plt.show()
 
   img_scale_factor = [mask.shape[0]/finalSize[0],mask.shape[1]/finalSize[1],mask.shape[2]/finalSize[2],1]
   msk_scale_factor = [mask.shape[0]/finalSize[0],mask.shape[1]/finalSize[1],mask.shape[2]/finalSize[2]]
 
   image = scipy.ndimage.zoom(cropped_image, img_scale_factor, order=2)
   mask = scipy.ndimage.zoom(cropped_mask, msk_scale_factor, order=2)
-
-  print("croppedmask:\n",cropped_mask)
-  print("rescaledmask:\n",mask)
+  mask = np.where(mask>0.1, 1, 0)
 
   return image, mask
 
@@ -69,7 +73,6 @@ def aug_crop(image, mask, finalSize):
 def add_pad(image, mask, padWidth=((0, 1), (0, 1), (0, 1)), padValue=0):
   
   padWidth4image = padWidth + ((0,0),)
-  print(padWidth4image)
 
   image = np.pad(image, padWidth4image, mode='constant', constant_values = padValue)
   mask = np.pad(mask, padWidth, mode='constant', constant_values = padValue)
@@ -79,13 +82,6 @@ def add_pad(image, mask, padWidth=((0, 1), (0, 1), (0, 1)), padValue=0):
 
 # Affine transfomation with rotation angle theta and translation
 def aug_affine(image, mask, theta_x=0, theta_y=0, theta_z=np.pi/4, tx=0, ty=0, tz=0):
-  # Define the rotation angles and translations
-  # theta_x = np.pi/4  # rotation around x axis
-  # theta_y = np.pi/6  # rotation around y axis
-  # theta_z = np.pi/3  # rotation around z axis
-  # tx = 1.0           # translation in x direction
-  # ty = 2.0           # translation in y direction
-  # tz = 3.0           # translation in z direction
 
   # Define the individual rotation matrices
 
@@ -128,52 +124,54 @@ def aug_affine(image, mask, theta_x=0, theta_y=0, theta_z=np.pi/4, tx=0, ty=0, t
   T[:3, :3] = Rz.dot(Ry).dot(Rx)
   T[:3, 3] = t
 
-
-
-  mask = scipy.ndimage.affine_transform(mask, T, order=2)
-  image[:,:,:,0] = scipy.ndimage.affine_transform(image[:,:,:,0], T)
-  image[:,:,:,1] = scipy.ndimage.affine_transform(image[:,:,:,1], T)
-  image[:,:,:,2] = scipy.ndimage.affine_transform(image[:,:,:,2], T)
+  mask = scipy.ndimage.affine_transform(mask, T, order=3)
+  image = scipy.ndimage.affine_transform(image, T)
 
   return image, mask
 
 
 
+
+# ----------------------------------------%%%%%%%%%%-----------------------------------------------
 # The functions below are used for stacked dataset (image Size of [number of sample, depth, row, column, channel])
 
 def flipImage(image, mask, rowFlip=1, columnFlip=1, depthFlip=0, p=0.5):
   if(rowFlip):
-    for i in range(image.shape[0]):
-      if np.random.rand()<p:
-        image[i], mask[i] = aug_flip_ud(image[i], mask[i])
+    if np.random.rand()<p:
+      image, mask = aug_flip_ud(image, mask)
 
   if(columnFlip):
-    for i in range(image.shape[0]):
-      if np.random.rand()<p:
-        image[i], mask[i] = aug_flip_lr(image[i], mask[i])
+    if np.random.rand()<p:
+      image, mask = aug_flip_lr(image, mask)
 
   if(depthFlip):
-    for i in range(image.shape[0]):
-      if np.random.rand()<p:
-        image[i], mask[i] = aug_flip_bu(image[i], mask[i])
-
-  return image, mask_img_ext
-
-
-def cropImage(image, mask, remainSize, p=0.5):
-  for i in range(image.shape[0]):
     if np.random.rand()<p:
-      image[i], mask[i] = aug_crop(image[i], mask[i], remainSize)
+      image, mask = aug_flip_bu(image, mask)
+
+  return image, mask
+
+
+def cropImage(image, mask, cropRatio=0.8, p=0.5):
+  remainSize = [np.random.randint(cropRatio*image.shape[1], image.shape[1]), np.random.randint(cropRatio*image.shape[2], image.shape[2]),image.shape[3]]
+
+  if np.random.rand()<p:
+    image, mask = aug_crop(image, mask, remainSize)
 
   return image, mask
 
 def affineTrans(image, mask, theta_x=0, theta_y=0, theta_z=np.pi/4, tx=0, ty=0, tz=0, p=0.5):
-  image = np.transpose(image, [0,3,2,1,4])
-  mask = np.transpose(mask, [0,3,2,1])
-  for i in range(image.shape[0]):
-    if np.random.rand()<p:
-      image[i], mask[i] = aug_affine(image[i], mask[i], theta_x, theta_y, theta_z, tx, ty, tz)
-      mask[i] = (mask[i]>0.5)
+  if np.random.rand()<p:
+    image, mask = aug_affine(image, mask, theta_x, theta_y, theta_z, tx, ty, tz)
+    mask = np.where(mask>0.5, 1, 0)
+  return image, mask
+
+def preprocessData(batch_input):
+  batch_input, batch_mask = batch_input
+  batch_input, batch_mask = flipImage(batch_input, batch_mask,p=0.3)          
+  batch_input, batch_mask = cropImage(batch_input, batch_mask,p=0.3)
+  batch_input, batch_mask = affineTrans(batch_input, batch_mask, theta_z=np.pi/16,p=0.2)
+  # print("in preprocessing:",batch_input.shape, batch_mask.shape)
+  return batch_input, batch_mask
 
 
   image = np.transpose(image, [0,3,2,1,4])
