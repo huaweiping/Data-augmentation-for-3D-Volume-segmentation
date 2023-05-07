@@ -12,7 +12,7 @@ Shuffle channel /
 Add pad /
 Affine transformation
 
-See comments for details
+See comments in code for details
 
 ## Ideal input:
 image: [number of sample, depth, row, column, channel==3] for dataset and [depth, row, column, channel==3] for single image-mask pair
