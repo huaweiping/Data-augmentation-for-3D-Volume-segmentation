@@ -152,7 +152,7 @@ def flipImage(image, mask, rowFlip=1, columnFlip=1, depthFlip=0, p=0.5):
 
 
 def cropImage(image, mask, cropRatio=0.8, p=0.5):
-  remainSize = [np.random.randint(cropRatio*image.shape[1], image.shape[1]), np.random.randint(cropRatio*image.shape[2], image.shape[2]),image.shape[3]]
+  remainSize = [np.random.randint(cropRatio*image.shape[0], image.shape[0]), np.random.randint(cropRatio*image.shape[1], image.shape[1]),image.shape[2]]
 
   if np.random.rand()<p:
     image, mask = aug_crop(image, mask, remainSize)
